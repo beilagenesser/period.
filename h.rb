@@ -1,5 +1,5 @@
 # h.rb
-# shameless robbed by samaaron
+# shamelessly robbed by samaaron
 define :ocean do |num, amp_mul=1|
   with_fx :reverb, mix: 0.5 do
     with_fx(:echo, delay: 0.5, decay: 4) do
@@ -21,6 +21,23 @@ define :echoes do |amp=1|
   end
 end
 
+define :cave_drops do |amp=1|
+  with_fx :reverb, room: 0.7, damp: 0.8 do
+    with_fx :echo, mix: rrand(0.1,0.6) do
+      sc = sample "/home/hlins/Downloads/drip.flac"
+      dur_drip = sample_duration "/home/hlins/Downloads/drip.flac"
+      sleep dur_drip - [0.75, 1.25, 1.5, 2.5, 1.5, 2, 3.1,4.2].choose
+    end
+  end
+end
+
+in_thread do
+  sync :ocean5
+  loop do
+    cave_drops
+  end
+end
+
 cue :oceans
 at [7, 12], [:crash, :within_oceans] do |m|
   cue m
@@ -38,7 +55,7 @@ uncomment do
       ocean 3, 0.75
       puts "ocean 4"
       ocean 2, 0.5
-      puts "ocean 5"
+      cue :ocean5
       ocean 3, 0.25
       puts "ocean 6"
       ocean 5, 0.17
@@ -51,6 +68,7 @@ uncomment do
     in_thread do
       echoes
     end
+    control s.
     5.times do
       echoes
     end
