@@ -1,4 +1,11 @@
 # h.rb
+
+deepdrip =  "/Users/holger/workspace/period./samples/deepdrip.wav"
+sd_drip = sample_duration deepdrip
+cave = "/Users/holger/workspace/period./samples/cave.wav"
+sd_cave = sample_duration cave
+
+
 # shamelessly robbed by samaaron
 define :ocean do |num, amp_mul=1|
   with_fx :reverb, mix: 0.5 do
@@ -21,64 +28,94 @@ define :echoes do |amp=1|
   end
 end
 
-define :cave_drops do |amp=1|
-  with_fx :reverb, room: 0.7, damp: 0.8 do
-    with_fx :echo, mix: rrand(0.1,0.6) do
-      sc = sample "/home/hlins/Downloads/drip.flac"
-      dur_drip = sample_duration "/home/hlins/Downloads/drip.flac"
-      sleep dur_drip - [0.75, 1.25, 1.5, 2.5, 1.5, 2, 3.1,4.2].choose
-    end
-  end
-end
 
 in_thread do
-  sync :ocean5
-  loop do
-    cave_drops
+  sync :enterthecave
+  puts sd_cave
+  amp_mul = 5
+  cs = sample cave, amp: 0, finish: 0.30
+  10.times do
+    control cs, amp: amp_mul * (line 0, 1, steps: 10).tick
+    sleep 3
+  end
+  puts "cave at full amp"
+  sleep 110
+  10.times do
+    control cs, amp: amp_mul * (line 1, 0, steps: 10).tick
+    sleep 3
+  end
+  cue :leavingthecave
+end
+
+uncomment do
+  in_thread(name: :waterdripping)do
+    sync :drips
+    20.times do
+      with_fx :echo, mix: rrand(0.1,0.6), decay: 4, amp: 0.4 do
+        sdd = sample deepdrip, amp: rrand(0.1, 0.5), pan: rrand(-1, 1), cutoff: rrand(60, 110), rate: rrand(0.5,1.9)
+        sleep sd_drip + [4.2, 3.7, 0, 0, 1, 2.5,5.8].choose
+      end
+    end
+    cue :end_waterdripping
   end
 end
 
-cue :oceans
-at [7, 12], [:crash, :within_oceans] do |m|
-  cue m
+in_thread(name: :outro) do
+  sync :outro
+  #TODO
+  ocean 3, 0.5
 end
+
+in_thread(name: :intro_meer) do
+  sync :intro
+  use_random_seed 2
+  puts "ocean 1"
+  ocean 3, 0.6
+  puts "ocean 2"
+  ocean 7
+  puts "ocean 3"
+  ocean 3, 0.75
+  puts "ocean 4"
+  ocean 2, 0.5
+
+  ocean 3, 0.25
+  cue :enterthecave
+  ocean 5, 0.17
+  cue :drips
+end
+
+
+
 uncomment do
   use_random_seed 0
   with_bpm 45 do
-    in_thread(name: :meer) do
-      use_random_seed 2
-      puts "ocean 1"
-      ocean 3, 0.6
-      puts "ocean 2"
-      ocean 7
-      puts "ocean 3"
-      ocean 3, 0.75
-      puts "ocean 4"
-      ocean 2, 0.5
-      cue :ocean5
-      ocean 3, 0.25
-      puts "ocean 6"
-      ocean 5, 0.17
-    end
-    sleep 22
-    echoes
+    sleep 1
+    cue :intro
+    sync :enterthecave
+    sleep 2
+    echoes 0.7
     cue :a_distant_object
-    echoes
-    cue :breathes_time
+    echoes 0.8
     in_thread do
-      echoes
+      echoes 0.9
     end
-    control s.
     5.times do
       echoes
     end
     cue :liminality_holds_fast
     echoes
     in_thread do
-      8.times do
-        synth :prophet, note: :e1, release: 8, cutoff: (line 70, 130, steps: 8).tick
+      9.times do
+        use_synth :prophet
+        notes = [:e1,:eb1,:d1,:db1].choose
+        tonics = ['augmented',:major,'m',:minor,'m6','m9'].choose
+        puts notes
+        puts tonics
+        play :e1, amp: 0.5, release: 8, cutoff: 120 if one_in(4)
+        play chord(notes,tonics), amp: 0.8, release: 8, cutoff: (line 70, 130, steps: 9).tick
         sleep 8
       end
+      cue :outro
     end
     4.times do
       echoes
@@ -91,5 +128,3 @@ uncomment do
     end
   end
 end
-
-puts "done.."
