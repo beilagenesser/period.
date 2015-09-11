@@ -1,8 +1,8 @@
 # h.rb
 
-deepdrip =  "/Users/holger/workspace/period./samples/deepdrip.wav"
+deepdrip =  "/home/hlins/workspace/private/period./samples/deepdrip.wav"
 sd_drip = sample_duration deepdrip
-cave = "/Users/holger/workspace/period./samples/cave.wav"
+cave = "/home/hlins/workspace/private/period./samples/cave.wav"
 sd_cave = sample_duration cave
 
 
@@ -50,7 +50,7 @@ end
 uncomment do
   in_thread(name: :waterdripping)do
     sync :drips
-    20.times do
+    16.times do
       with_fx :echo, mix: rrand(0.1,0.6), decay: 4, amp: 0.4 do
         sdd = sample deepdrip, amp: rrand(0.1, 0.5), pan: rrand(-1, 1), cutoff: rrand(60, 110), rate: rrand(0.5,1.9)
         sleep sd_drip + [4.2, 3.7, 0, 0, 1, 2.5,5.8].choose
@@ -62,26 +62,27 @@ end
 
 in_thread(name: :outro) do
   sync :outro
-  #TODO
-  ocean 3, 0.5
+  oceans_reps = [3  ,  1,   3,  6,   3,  5]
+  oceans_amps = [0.6,1.4,0.45,0.3,0.15,0.1]
+  i = 0
+  6.times do
+    ocean oceans_reps[i],oceans_amps[i]
+    i = i + 1
+  end
 end
 
 in_thread(name: :intro_meer) do
   sync :intro
   use_random_seed 2
-  puts "ocean 1"
-  ocean 3, 0.6
-  puts "ocean 2"
-  ocean 7
-  puts "ocean 3"
-  ocean 3, 0.75
-  puts "ocean 4"
-  ocean 2, 0.5
-
-  ocean 3, 0.25
-  cue :enterthecave
-  ocean 5, 0.17
-  cue :drips
+  oceans_reps = [3  ,7,    3,  2,   3,  5]
+  oceans_amps = [0.6,1,0.75,0.5,0.25,0.17]
+  i = 0
+  6.times do
+    ocean oceans_reps[i],oceans_amps[i]
+    cue :enterthecave if i == 4
+    cue :drips if i ==  5
+    i = i + 1
+  end
 end
 
 
@@ -93,8 +94,8 @@ uncomment do
     cue :intro
     sync :enterthecave
     sleep 2
+    #TODO make in_thread
     echoes 0.7
-    cue :a_distant_object
     echoes 0.8
     in_thread do
       echoes 0.9
@@ -102,7 +103,6 @@ uncomment do
     5.times do
       echoes
     end
-    cue :liminality_holds_fast
     echoes
     in_thread do
       9.times do
@@ -120,9 +120,7 @@ uncomment do
     4.times do
       echoes
     end
-    cue :within_reach
     echoes
-    cue :as_it_unfolds
     in_thread do
       echoes
     end
